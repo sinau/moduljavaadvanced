@@ -342,3 +342,100 @@ public class MainMahasiswa {
 ### Tugas ###
 
 Buatlah menggunakan DAO untuk insert, select, update, delete pada data dosen. Field-field pada tabel dosen: nomor induk, nama, alamat, email.
+
+
+## [PERTEMUAN 2] ##
+
+## Jasper Report ##
+
+Jasper report merupakan tools di Java yang dipakai untuk keperluan pembuatan report. Report atau biasa disebut sebagai dokumen pelaporan sangat berguna dalam berbagai aplikasi perkantoran.
+
+Jasper report menyediakan berbagai fasilitas untuk mendukung pelaporan tersebut. Diantaranya adalah mekanisme export yang berguna untuk membuat dokumen dalam bentuk bermacam-macam file seperti pdf, html, dll.
+
+## Struktur Report ##
+
+![struktur jasper report](img/jr_structure.png)
+
+### Title ###
+
+Merupakan judul dari report yang akan dibuat. Title ini hanya akan dicetak satu kali selama report dibuat.
+
+### Page Header ###
+
+Merupakan header dari halaman report. Header ini akan dicetak permasing-masing halaman (jika halaman report lebih dari satu).
+
+### Column Header ###
+
+Header untuk kolom atau table, dan akan dicetak pada setiap detil kolom.
+
+### Detail ###
+
+Detail merupakan band yang akan menampilkan detail dari report yang dibuat.
+
+### Column Footer ###
+
+Column footer akan tampil diakhir setial kolom.
+
+### Page Footer ###
+
+Page footer akan tampil disetiap halaman report.
+
+### Last Page Footer ###
+
+Akan tampil dihalaman paling akhir. Ini dimaksudkan jika ingin di footer dihalaman paling akhir memiliki isi yang berbeda dari footer yang ada disetiap halaman.
+
+### Summary ###
+
+Summary akan tampil diakhir halaman. Biasanya berisi total dari kalkulasi, dll.
+
+## Membuat Report ##
+
+Jalankan jasper report yang telah diinstall dan create new blank A4 report.
+
+Jasper report memiliki banyak komponen, tapi yang sering banyak dipakai biasanya komponen field, static text, image dan chart.
+
+Kita coba komponen yang sederhana dulu. Drag beberapa static text dan text field ke dalam blank report yang kita buat tadi.
+
+![add komponen](img/jr_desain.png)
+
+Compile report yang telah kita buat. Setelah report tersebut dicompile akan menghasilkan satu buah file hasil kompilasi yaitu file dengan extension .jasper. File .jasper inilah yang nantinya akan dijalankan. Kemudian jalankan file tersebut dengan menggunakan empty datasource.
+
+![jasper run](img/jr_run.png)
+
+## Panggil Report Dari Java ##
+
+Jasper report hanya digunakan untuk membantu mendesain report yang akan kita buat. Tujuan akhirnya adalah supaya bisa dipanggil dari program Java. Sekarang coba kita panggil report yang telah kita buat ke program Java.
+
+Sebelum kita mulai ngoding pertama-tama kita copy beberap library yang kita butuhkan ke classpath eclipse (library ada di source code).
+
+```java
+import java.util.HashMap;
+import java.util.Map;
+
+import net.sf.jasperreports.engine.JRDataSource;
+import net.sf.jasperreports.engine.JREmptyDataSource;
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.view.JasperViewer;
+
+public class JasperTest {
+
+	public static void main(String[] args) {
+
+		Map<String, Object> parameters = new HashMap<String, Object>();
+
+		JRDataSource dataSource = new JREmptyDataSource();
+
+		try {
+			// Sesuaikan alamat file jasper dengan yang ada di local kalian
+			JasperPrint jasperPrint = JasperFillManager.fillReport(
+            "/home/kakashi/JaspersoftWorkspace/MyReports/Blank_A4.jasper",
+            parameters, dataSource);
+			JasperViewer.viewReport(jasperPrint);
+		} catch (JRException e) {
+			e.printStackTrace();
+		}
+	}
+}
+```
