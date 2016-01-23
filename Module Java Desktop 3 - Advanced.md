@@ -439,3 +439,140 @@ public class JasperTest {
 	}
 }
 ```
+
+
+## [PERTEMUAN 3] ##
+
+## Jasper Report MySQL Datasource ##
+
+Pada pertemuan sebelumnya kita telah belajar membuat report dengan tanpa koneksi database. Sekarang kita akan mencoba mengkoneksikan report dengan database mysql. Kita akan menggunakan database dan table mahasiswa yang pernah kita buat pada pertemuan pertama modul ini.
+
+### Membuat New Data Adapter ###
+
+```
+Catatan: Setiap versi Jasper Report memiliki cara berbeda-beda untuk menambahkan
+library dan membuat koneksi ke database.
+Ikuti cara dibawah ini jika terdapat pada versi yang kalian gunakan.
+```
+
+Jalankan Jasper report, buat folder `lib` dan copy library MySQL kedalamnya. Masukkan library tersebut ke build path (caranya sama seperti saat menambahkan library ke build path di Eclipse).
+
+![add library mysql](img/jr_mysqllib_1.png)
+
+Setelah itu kita buat data adapter baru dengan mengklik button New Data Adapter yang ada dibagian atas tepat dibawah menu. Rename namanya menjadi MYSQL_DATAADAPTER.xml.
+
+![add new data adapter](img/jr_mysqllib_2.png)
+
+Klik button next dan pilih Database JDBC Connection.
+
+![data connection type](img/jr_mysqllib_3.png)
+
+Klik next dan pilih JDBC driver com.mysql.jdbc.Driver. Sesuaikan nama database, username dan password sesuai dengan setting MySQL ditempat kalian. Klik button Test untuk mencoba apakah database berhasil terhubung. Jika muncul pesan success maka telah berhasil menghubungkan dan klik button Finish.
+
+![jdbc connection](img/jr_mysqllib_4.png)
+
+### Membuat Report Baru ###
+
+Saatnya kita membuat report baru dengan memilih template report Blank A4.
+
+![blank A4 report](img/jr_cobamysql_1.png)
+
+Rename report dengan nama cobamysql.jrxml
+
+![rename report](img/jr_cobamysql_2.png)
+
+Pilih data adapter yang tadi sudah kita buat. Buka tab diagram dan drag table mahasiswa kedalamnya. Centang semua field yang ada dalam table mahasiswa.
+
+![report datasource](img/jr_cobamysql_3.png)
+
+Pindahkan semua field mahasiswa ke dalam kolom sebelah kanan. Ini untuk mendaftarkan field table database supaya dikenali oleh Jasper report.
+
+![report field](img/jr_cobamysql_4.png)
+
+Pada bagian ini pindahkan field nim saja ke sebelah kanan. Ini untuk sorting data. Kemudian klik next dan finish.
+
+![report group](img/jr_cobamysql_5.png)
+
+Kita akan mendapatkan sebuah report baru yang masih kosong. Hapus band-band yang tidak akan kita pakai dan sisakan hanya band title, column header, detail dan summary.
+
+Desain report yang tadi baru kita buat supaya menjadi seperti gambar dibawah ini.
+
+![blank design](img/jr_cobamysql_6.png)
+
+Pada tab Outline ditampilan sebelah kiri bawah, buka tree Fields. Drag nim, nama dan nohp kedalam report. Perbaiki tampilan supaya menjadi seperti dibawah ini.
+
+![add fields](img/jr_cobamysql_7.png)
+
+Compile atau build report yang telah dibuat dan coba jalankan.
+
+![running report](img/jr_cobamysql_8.png)
+
+Pada tab Outline ditampilan sebelah kiri bawah, buka tree Variables. Drag PAGE_NUMBER dan REPORT_COUNT kedalam report. Setelah kita drag kedalam report, secara otomatis akan menjadi dynamic text field. Kita bisa coding didalam sini menggunakan syntax Java. Coba kita ubah pada bagian REPORT_COUNT yang telah didrag tadi. Ubah text yang ada didalamnya menjadi `"Jumlah report: " + $V{REPORT_COUNT}`.
+
+```
+Catatan: Misal kita ingin menampilkan report count dengan cara yang berbeda / ekstrem.
+Jika report count angka ganjil maka akan ditampilkan "Ganjil",
+jika genap maka akan ditampilkan "Genap". Untuk mengubah menjadi seperti ini,
+gunakan code dibawah ini.
+```
+
+`$V{REPORT_COUNT} % 2 == 0 ? "Genap" : "Ganjil"`
+
+![add variables](img/jr_cobamysql_9.png)
+
+Compile / build report dan coba jalankan.
+
+![running report](img/jr_cobamysql_10.png)
+
+## Panggil Report Dari Java ##
+
+Saatnya kita panggil report yang telah kita buat di Java.
+
+```java
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
+
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.view.JasperViewer;
+
+public class JasperTestMySQL {
+
+	public static void main(String[] args) {
+		Map<String, Object> parameters = new HashMap<String, Object>();
+
+		MysqlDataSource mysqlDataSource = new MysqlDataSource();
+		mysqlDataSource.setUser("root");
+		mysqlDataSource.setPassword("root");
+		mysqlDataSource.setDatabaseName("sinau");
+		mysqlDataSource.setServerName("localhost");
+		mysqlDataSource.setPortNumber(3306);
+
+		try {
+			// Sesuaikan alamat file jasper dengan yang ada di local kalian
+			JasperPrint jasperPrint = JasperFillManager.fillReport(
+            "/home/kakashi/JaspersoftWorkspace/MyReports/cobamysql.jasper",
+            parameters, mysqlDataSource.getConnection());
+			JasperViewer.viewReport(jasperPrint);
+		} catch (JRException e) {
+			e.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				mysqlDataSource.getConnection().close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+}
+```
+
+
+
+
