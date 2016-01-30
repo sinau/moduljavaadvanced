@@ -574,5 +574,176 @@ public class JasperTestMySQL {
 ```
 
 
+## [PERTEMUAN 4] ##
+
+Pada pertemuan sebelumnya kita telah belajar membuat report sederhana dan menghubungkan ke database. Pada kesempatan kali ini kita akan mencoba membuat report berbasis grafik.
+
+Sebelum kita mulai sebaiknya kita siapkan dulu database dan table yang akan kita gunakan. Supaya tidak menggangu program dari pertemuan-pertemuan sebelumnya ada baiknya kita buat table yang baru.
+
+```sql
+USE sinau;
+
+CREATE TABLE `sinau`.`mahasiswa2` (
+  `nim` VARCHAR(15) NOT NULL,
+  `nama` VARCHAR(50) NOT NULL,
+  `jeniskelamin` VARCHAR(10) NOT NULL,
+  `angkatan` VARCHAR(4) NOT NULL,
+  `nohp` VARCHAR(20) NOT NULL,
+  PRIMARY KEY (`nim`));
+```
+
+Kita masukkan sample data ke dalamnya.
+
+```sql
+INSERT INTO `mahasiswa2`(nim,nama,jeniskelamin,angkatan,nohp)
+VALUES('12308948474','budi','LAKI-LAKI','2008','0837354469');
+
+INSERT INTO `mahasiswa2`(nim,nama,jeniskelamin,angkatan,nohp)
+VALUES('12308837362','joni','LAKI-LAKI','2008','089385642');
+
+INSERT INTO `mahasiswa2`(nim,nama,jeniskelamin,angkatan,nohp)
+VALUES('12308837483','johan','LAKI-LAKI','2008','087638839');
+
+INSERT INTO `mahasiswa2`(nim,nama,jeniskelamin,angkatan,nohp)
+VALUES('12308027824','yuri','PEREMPUAN','2008','0821874835');
+
+INSERT INTO `mahasiswa2`(nim,nama,jeniskelamin,angkatan,nohp)
+VALUES('12307847839','yuda','LAKI-LAKI','2007','0822953533');
+
+INSERT INTO `mahasiswa2`(nim,nama,jeniskelamin,angkatan,nohp)
+VALUES('12307568477','yuki','PEREMPUAN','2007','0899834335');
+
+INSERT INTO `mahasiswa2`(nim,nama,jeniskelamin,angkatan,nohp)
+VALUES('12306788463','maya','PEREMPUAN','2006','0812737435');
+
+INSERT INTO `mahasiswa2`(nim,nama,jeniskelamin,angkatan,nohp)
+VALUES('12305948542','heru','LAKI-LAKI','2005','0832846565');
+
+INSERT INTO `mahasiswa2`(nim,nama,jeniskelamin,angkatan,nohp)
+VALUES('12309976495','yodan','LAKI-LAKI','2009','0803473744');
+
+INSERT INTO `mahasiswa2`(nim,nama,jeniskelamin,angkatan,nohp)
+VALUES('12310183635','nami','PEREMPUAN','2010','0882375235');
+
+INSERT INTO `mahasiswa2`(nim,nama,jeniskelamin,angkatan,nohp)
+VALUES('12310947363','farah','PEREMPUAN','2010','0892745244');
+```
+
+## Report Chart ##
+
+Buat report baru di Jasper report, caranya sama seperti pada pertemuan sebelumnya. Dan pada saat memilih datasource masukkan query dibawah ini.
+
+```sql
+SELECT
+	sinau.mahasiswa2.jeniskelamin,
+	sinau.mahasiswa2.angkatan,
+	COUNT(*) AS jumlahmhs
+FROM sinau.mahasiswa2
+GROUP BY jeniskelamin, angkatan
+```
+
+Pada saat memilih `Fields` masukkan semua ke sebelah kanan.
+
+Setelah report dibuat, seperti biasa kita hapus `report band` yang tidak kita gunakan.
+
+![remove unused band](img/jr_chart1.png)
+
+### Report Parameter ###
+
+Ada kalanya saat membuat report kita ingin menambahkan data dinamis kedalam report. Data ini bisa kita tambahkan sebagai parameter.
+
+Untuk membuatnya klik button `DataSet and Query editor dialog` - tergantung dari versi Jasper report yang digunakan, beda versi maka akan beda nama dan letak button-nya.
+
+Pada tab parameters tambahkan parameter baru dan beri nama `DIBUAT_OLEH`, is prompt `true` dan bertipe `java.lang.String`. Klik OK dan Save.
+
+![add new parameter](img/jr_chart2.png)
+
+### Desain Report ###
+
+Drag parameter yang telah kita buat ke band `Title`. Karena parameter yang tadi kita buat bertipe `String`, kita bisa mengubah tulisan yang ada didalamnya sesuai kebutuhan, asalkan tidak menyimpang dari syntax tipe data `String`. Coba kita ubah menjadi seperti dibawah ini.
+
+```java
+"Dibuat oleh: " + $P{DIBUAT_OLEH} + "pada tanggal " + new java.util.Date()
+```
+
+![edit parameter](img/jr_chart3.png)
+
+Selanjutnya buat tampilan report menjadi seperti dibawah ini.
+
+![design report](img/jr_chart4.png)
+
+Kita coba test compile dan jalankan.
+
+![running report](img/jr_chart5.png)
+
+### Tambahkan Chart ###
+
+Setelah hasil dari report sesuai dengan ekspektasi yang kita harapkan, sekarang saatnya kita tambahkan chart ke dalam report.
+
+Drag `Chart` yang terdapat pada tab Basic Element, drag ke band `Summary`. Pilih pie 3D chart kemudian klik next.
+
+![pie 3D chart](img/jr_chart6.png)
+
+Ubah bagian value dengan `$F{jumlahmhs}`, bagian label dengan `$F{angkatan}` dan key dengan `$F{jeniskelamin} + $F{angkatan}`.
+
+![pie 3D chart](img/jr_chart7.png)
+
+Coba kita build dan jalankan report.
+
+![pie 3D chart](img/jr_chart8.png)
+
+## Panggil Report Dari Java ##
+
+Saatnya kita panggil report yang telah kita buat di Java. Akan tetapi sebelum mulai coding kita harus menambahkan library `jfreechart-1.0.19.jar` dan `jcommon-1.0.23.jar` ke dalam build path.
+
+```java
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
+
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.view.JasperViewer;
+
+public class JasperCobaChart {
+	public static void main(String[] args) {
+		Map<String, Object> parameters = new HashMap<String, Object>();
+		parameters.put("DIBUAT_OLEH", "Sinau Academy");
+
+		MysqlDataSource mysqlDataSource = new MysqlDataSource();
+		mysqlDataSource.setUser("root");
+		mysqlDataSource.setPassword("root");
+		mysqlDataSource.setDatabaseName("sinau");
+		mysqlDataSource.setServerName("localhost");
+		mysqlDataSource.setPortNumber(3306);
+
+		try {
+			// Sesuaikan alamat file jasper dengan yang ada di local kalian
+			JasperPrint jasperPrint = JasperFillManager.fillReport("/home/kakashi/JaspersoftWorkspace/MyReports/cobachart.jasper", parameters, mysqlDataSource.getConnection());
+			JasperViewer.viewReport(jasperPrint);
+		} catch (JRException e) {
+			e.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				mysqlDataSource.getConnection().close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+}
+```
+
+![pie 3D chart](img/jr_chart9.png)
+
+## Tugas ##
+
+Ganti report diatas menggunakan chart yang lain.
+
 
 
