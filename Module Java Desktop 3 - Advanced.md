@@ -686,11 +686,11 @@ Drag `Chart` yang terdapat pada tab Basic Element, drag ke band `Summary`. Pilih
 
 Ubah bagian value dengan `$F{jumlahmhs}`, bagian label dengan `$F{angkatan}` dan key dengan `$F{jeniskelamin} + $F{angkatan}`.
 
-![pie 3D chart](img/jr_chart7.png)
+![chart data configuration](img/jr_chart7.png)
 
 Coba kita build dan jalankan report.
 
-![pie 3D chart](img/jr_chart8.png)
+![running pie 3D chart report](img/jr_chart8.png)
 
 ## Panggil Report Dari Java ##
 
@@ -739,11 +739,138 @@ public class JasperCobaChart {
 }
 ```
 
-![pie 3D chart](img/jr_chart9.png)
+![running pie 3D chart report](img/jr_chart9.png)
 
 ## Tugas ##
 
 Ganti report diatas menggunakan chart yang lain.
 
 
+## [PERTEMUAN 5] ##
 
+Saat membuat report adakalanya kita ingin membuat tabel yang lebih dinamis. Dari beberapa report yang telah kita buat semuanya ber-incremen ke bawah. Bagaimana kalo kita ingin membuat report dengan incremen ke samping, apakah bisa. Contoh seperti dibawah ini.
+
+|           |  2005  |  2006  |  2007  |  2008  |  2009  |  2010  |  TOTAL  |
+|:---------:|:------:|:------:|:------:|:------:|:------:|:------:|:-------:|
+| LAKI-LAKI |    1   |    0   |   1    |    3   |   1    |   0    |    6    |
+| PEREMPUAN |    0   |    1   |   1    |    1   |   0    |   2    |    5    |
+
+Pada contoh diatas tahun merupakan kolom dinamis yang ber-incremental ke samping.
+
+## Crosstab Report ##
+
+Pada kasus seperti diatas kita dapat menggunakan fasilitas Jasper report yang dinamakan crosstab. Fitur ini membuat table didalam report menjadi dinamis dapat ber-incremen kesamping dan kebawah.
+
+### Membuat Report ###
+
+Buat report baru di Jasper report, caranya sama seperti pada pertemuan sebelumnya. Dan pada saat memilih datasource masukkan query dibawah ini.
+
+```sql
+SELECT sinau.mahasiswa2.nim,
+	sinau.mahasiswa2.nama,
+	sinau.mahasiswa2.jeniskelamin,
+	sinau.mahasiswa2.angkatan,
+	sinau.mahasiswa2.nohp
+FROM sinau.mahasiswa2
+```
+
+Pada saat memilih `Fields` masukkan semua ke sebelah kanan.
+
+Setelah report dibuat, seperti biasa kita hapus `report band` yang tidak kita gunakan. Sisakan hanya band Title dan Summary saja, hanya dua itu saja yang kita butuhkan.
+
+### Menambahkan Crosstab Ke Report ###
+
+Drag component crosstab kedalam band summary dan halaman crosstab wizard akan muncul. Pilih Create new dataset.
+
+![create new dataset](img/jr_crosstab1.png)
+
+Beri nama dataset.
+
+![dataset name](img/jr_crosstab2.png)
+
+pilih datasource yang akan digunakan dan masukkan query dibawah ini.
+
+```sql
+SELECT sinau.mahasiswa2.nim,
+	sinau.mahasiswa2.nama,
+	sinau.mahasiswa2.jeniskelamin,
+	sinau.mahasiswa2.angkatan,
+	sinau.mahasiswa2.nohp
+FROM sinau.mahasiswa2
+```
+
+![dataset datasource](img/jr_crosstab3.png)
+
+Pada saat memilih `Fields` masukkan semua ke sebelah kanan.
+Setelah itu akan muncul pilihan untuk memasukkan field mana yang akan dijadikan sebagai dynamic column. Pilih angkatan untuk dynamic column.
+
+![crosstab dynamic column](img/jr_crosstab4.png)
+
+Untuk dynamic row pilih jeniskelamin dan ganti total menjadi none.
+
+![crosstab dynamic row](img/jr_crosstab5.png)
+
+Untuk isi dari table kita gunakan jeniskelamin juga.
+
+![crosstab data](img/jr_crosstab6.png)
+
+Bagian terakhir adalah memilih layout, kita klik finish saja.
+
+![crosstab layout](img/jr_crosstab7.png)
+
+Sesuaikan ukuran crosstab dengan band Summary dan tambahkan judul pada band Title, sehingga report tampak seperti pada gambar dibawah ini.
+
+![crosstab report](img/jr_crosstab8.png)
+
+Build dan jalankan report yang telah kita buat.
+
+![running crosstab report](img/jr_crosstab9.png)
+
+## Panggil Report Dari Java ##
+
+Saatnya kita panggil report crosstab dari Java.
+
+```java
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.mysql.jdbc.jdbc2.optional.MysqlDataSource;
+
+import net.sf.jasperreports.engine.JRException;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.view.JasperViewer;
+
+public class JasperCobaCrossTab {
+
+	public static void main(String[] args) {
+		Map<String, Object> parameters = new HashMap<String, Object>();
+
+		MysqlDataSource mysqlDataSource = new MysqlDataSource();
+		mysqlDataSource.setUser("root");
+		mysqlDataSource.setPassword("root");
+		mysqlDataSource.setDatabaseName("sinau");
+		mysqlDataSource.setServerName("localhost");
+		mysqlDataSource.setPortNumber(3306);
+
+		try {
+			// Sesuaikan alamat file jasper dengan yang ada di local kalian
+			JasperPrint jasperPrint = JasperFillManager.fillReport("/home/kakashi/JaspersoftWorkspace/MyReports/cobacrosstab.jasper", parameters, mysqlDataSource.getConnection());
+			JasperViewer.viewReport(jasperPrint);
+		} catch (JRException e) {
+			e.printStackTrace();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		} finally {
+			try {
+				mysqlDataSource.getConnection().close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+}
+```
+
+![running crosstab report](img/jr_crosstab10.png)
